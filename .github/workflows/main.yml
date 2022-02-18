@@ -5,8 +5,6 @@ on:
     branch:
       - 15.0
       - staging.15.0
-    tags:
-      - v*.*.*
 
 jobs:
 
@@ -34,16 +32,6 @@ jobs:
       - name: Get branch name
         id: branch-name
         uses: tj-actions/branch-names@v5.1
-        
-      - name: Running on the default branch.
-        if: steps.branch-name.outputs.is_default == 'true'
-        run: |
-          echo "Running on default: ${{ steps.branch-name.outputs.current_branch }}"
-        # Outputs: "Running on default: main".
-      - name: Running on a pull request branch.
-        if: steps.branch-name.outputs.is_default == 'false'
-        run: |
-          echo "Running on pr: ${{ steps.branch-name.outputs.current_branch }}"
       -     
         name: Cache Docker layers
         uses: actions/cache@v2
@@ -67,8 +55,8 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           push: true
           tags: | 
-            ${{ secrets.DOCKER_HUB_USERNAME }}/odoo-${{ steps.branch-name.outputs.ref_branch }}:${{ steps.branch-name.outputs.tag }}
-            ${{ secrets.DOCKER_HUB_USERNAME }}/odoo-${{ steps.branch-name.outputs.ref_branch }}:latest
+            ${{ secrets.DOCKER_HUB_USERNAME }}/odoo:${{ steps.branch-name.outputs.current_branch }}
+            ${{ secrets.DOCKER_HUB_USERNAME }}/odoo:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
       -
