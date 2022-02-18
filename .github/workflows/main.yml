@@ -4,6 +4,9 @@ on:
   push:
     branch:
       - 15.0
+      - staging.15.0
+    tags:
+      - v*.*.*
 
 jobs:
 
@@ -64,7 +67,8 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           push: true
           tags: | 
-            ${{ secrets.DOCKER_HUB_USERNAME }}/odoo:${{ steps.branch-name.outputs.current_branch }}
+            ${{ secrets.DOCKER_HUB_USERNAME }}/odoo-${{ steps.branch-name.outputs.current_branch }}:${{ steps.branch-name.outputs.tag }}
+            ${{ secrets.DOCKER_HUB_USERNAME }}/odoo-${{ steps.branch-name.outputs.current_branch }}:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
       -
