@@ -64,8 +64,7 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           push: true
           tags: | 
-            ${{ secrets.DOCKER_HUB_USERNAME }}/odoo-${{ steps.branch-name.outputs.current_branch }}:${{ steps.get-branch.outputs.tag }}
-            ${{ secrets.DOCKER_HUB_USERNAME }}/odoo-${{ steps.branch-name.outputs.current_branch }}:latest
+            ${{ secrets.DOCKER_HUB_USERNAME }}/odoo:${{ steps.branch-name.outputs.current_branch }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
       -
