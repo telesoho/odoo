@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import configparser
+import os
+import argparse
+import json
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument('-c', '--config', help="config file",
+                    action='store', metavar='CONFIG', required=True)
+
+parser.add_argument('-s', '--sections', help="sections",
+                    action='store', metavar='SECTIONS', type=json.loads, required=True)
+
+parser.add_argument('--delete-env', help="delete environ after save",
+                    action='store', default=False)
+
+args = vars(parser.parse_args())
+
+def save_environ(config_file, sections):
+    print(f"{config_file}, {sections}")
+    conf = configparser.ConfigParser(allow_no_value = True)
+    conf.read(config_file)
+
+    for env_name in os.environ:
+        for key in sections:
+            section = sections[key]
+            if not section in conf:
+                conf[section] = {}
+
+            if env_name.startswith(key):
+                name = env_name[len(key):].lower()
+                conf[section][name] = os.environ[env_name]
+                if args['delete_env']:
+                    del os.environ[env_name]
+
+    with open(config_file, 'w') as configfile:
+        print(f"write config to {config_file}")
+        print(f"{conf}")
+        conf.write(configfile)
+
+
+save_environ(args['config'], args['sections'])

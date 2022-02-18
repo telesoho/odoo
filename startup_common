@@ -1,0 +1,70 @@
+#!/bin/bash
+#
+# This script will be call by boot.
+
+log_src='['${0##*/}']'
+
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+
+function _setup_ssh_key {
+    odoo_user=$1
+    private_ssh_key_file=$2
+    # SSH config folder in $HOME folder of target user
+    ssh_folder=$( getent passwd "$odoo_user" | cut -d: -f6 )/.ssh
+
+    # SSH config folder already exists when container has been restarted
+    if [ ! -d "$ssh_folder" ]; then
+        # Create SSH config folder
+        sudo -i -u "$odoo_user" mkdir "$ssh_folder"
+
+        # Copy SSH private key from /opt/odoo/ssh
+        sudo -i -u "$odoo_user" cp /opt/odoo/ssh/$private_ssh_key_file "$ssh_folder"
+
+        echo $log_src[`date +%F.%H:%M:%S`]' Scanning GitHub key...'
+        # Hide ssh-keyscan stderr output since it's actually log message
+        ssh-keyscan github.com 2> /dev/null | \
+            sudo -i -u "$odoo_user" tee "$ssh_folder/known_hosts" > /dev/null
+
+        # Bind SSH key to GitHub host
+        echo "host github.com
+                HostName github.com
+                User git
+                IdentityFile $ssh_folder/$private_ssh_key_file" | \
+            sudo -i -u "$odoo_user" tee "$ssh_folder/config" > /dev/null
+
+
+        echo $log_src[`date +%F.%H:%M:%S`]' Scanning Gitlab key...'
+        # Hide ssh-keyscan stderr output since it's actually log message
+        ssh-keyscan gitlab.com 2> /dev/null | \
+            sudo -i -u "$odoo_user" tee -a "$ssh_folder/known_hosts" > /dev/null
+
+        # Bind SSH key to gitlab host
+        echo "Host gitlab.com
+                PreferredAuthentications publickey
+                hostName 172.65.251.78
+           		StrictHostKeyChecking no
+          		UserKnownHostsFile /dev/null
+                IdentityFile $ssh_folder/$private_ssh_key_file" | \
+            sudo -i -u "$odoo_user" tee -a "$ssh_folder/config" > /dev/null
+
+        # Secure SSH key
+        chmod 400 "$ssh_folder/$private_ssh_key_file"
+    fi
+}
+
+if [ -f /opt/odoo/ssh/id_ed25519 ]; then
+    _setup_ssh_key 'odoo' 'id_ed25519'
+fi
+
+# load addon from git server, must lock check
+# lock_file=/opt/odoo/custom/ngc_poc.lock
+# :>>$lock_file
+# {
+#     flock 100
+#     if [ ! -d /opt/odoo/custom/ngc_poc ]; then
+#         echo -e $log_src[`date +%F.%H:%M:%S`]"$RED Clone ngc_poc staging from gitlab... $NC"
+#         sudo -i -u odoo git clone --single-branch --branch staging git@gitlab.com:sdl-poc/ngc_poc_phase1.git /opt/odoo/custom/ngc_poc
+#     fi
+# } 100<$lock_file

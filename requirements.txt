@@ -1,0 +1,19 @@
+wheel
+email-validator==1.1.3
+flanker>=0.9.11
+redis
+git+https://github.com/telesoho/dnsq.git
+pyOpenSSL==21.0.0
+line-bot-sdk
+# === for intergrate testing
+websocket-client
+
+# === venders addons
+# apispec>=4.0.0
+# cerberus
+# jsondiff
+# marshmallow
+# marshmallow-objects>=2.0.0
+# parse-accept-language
+# pyquerystring
+# cachetools
