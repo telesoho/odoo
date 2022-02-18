@@ -28,15 +28,11 @@ jobs:
           echo "Status:    ${{ steps.buildx.outputs.status }}"
           echo "Flags:     ${{ steps.buildx.outputs.flags }}"
           echo "Platforms: ${{ steps.buildx.outputs.platforms }}"
-      - 
-        name: Get the tags
-        id: get_tags
-        run: echo ::set-output name=TAG::${GITHUB_REF/refs\/tags\//}
-      - 
-        name: Extract branch name
-        id: get_branch
-        shell: bash
-        run: echo "##[set-output name=BRANCH;]$(echo ${GITHUB_REF#refs/heads/})"
+      - name: Use action
+        id: get-branch
+        uses: ypicard/get-branch-name-github-action@v1
+      - name: Echo outpus
+        run: echo "branch=${{ steps.get-branch.outputs.branch }} - tag=${{ steps.get-branch.outputs.tag }}"
       -     
         name: Cache Docker layers
         uses: actions/cache@v2
@@ -59,9 +55,9 @@ jobs:
           file: ./Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           push: true
-          tags: |
-            ${{ secrets.DOCKER_HUB_USERNAME }}/odoo-${{ steps.get_branch.outputs.BRANCH }}:${{ steps.get_tags.outputs.TAG }}
-            ${{ secrets.DOCKER_HUB_USERNAME }}/odoo:latest
+          tags: | 
+            ${{ secrets.DOCKER_HUB_USERNAME }}/odoo-${{ ssteps.get-branch.outputs.branch }}:${{ steps.get-branch.outputs.tag }}
+            ${{ secrets.DOCKER_HUB_USERNAME }}/odoo-${{ ssteps.get-branch.outputs.branch }}:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
       -
